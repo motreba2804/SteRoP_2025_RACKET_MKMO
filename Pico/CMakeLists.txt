@@ -24,6 +24,17 @@ target_link_libraries(icm20948
     hardware_i2c
 )
 
+# ===== Biblioteka PLATFORM =====
+add_library(platform
+            src/platform.c)
+
+target_include_directories(platform PUBLIC
+    ${CMAKE_CURRENT_LIST_DIR}/include
+)
+
+target_link_libraries(platform
+                    pico_stdlib)   
+
 # ===== Program główny =====
 add_executable(${PROJECT_NAME}
     src/main.c
@@ -33,6 +44,7 @@ target_link_libraries(${PROJECT_NAME}
     pico_stdlib
     hardware_i2c
     icm20948
+    platform
 )
 
 pico_add_extra_outputs(${PROJECT_NAME})

@@ -20,6 +20,8 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "usb_host.h"
+#include "stm32f429i_discovery_lcd.h"
+#include "stm32f429i_discovery_sdram.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -91,82 +93,206 @@ void StartDefaultTask(void const * argument);
   */
 int main(void)
 {
-
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_CRC_Init();
-  MX_DMA2D_Init();
-  MX_FMC_Init();
+  // MX_DMA2D_Init();
+  // MX_FMC_Init();
   MX_I2C3_Init();
-  MX_LTDC_Init();
-  MX_SPI5_Init();
+  // MX_LTDC_Init();
+  // MX_SPI5_Init();
   MX_TIM1_Init();
   MX_USART1_UART_Init();
+
   /* USER CODE BEGIN 2 */
+
+    BSP_SDRAM_Init();
+    BSP_LCD_Init();
+    BSP_LCD_LayerDefaultInit(1, 0xD0000000);
+    BSP_LCD_SelectLayer(1);
+    BSP_LCD_DisplayOn();
+
+    int max_x = BSP_LCD_GetXSize();
+    int max_y = BSP_LCD_GetYSize();
+
+    BSP_LCD_Clear(LCD_COLOR_BLACK);
+
+    int plat_w = 60;
+    int plat_h = 10;
+    int plat_y = max_y - 15;
+    int positions[3] = { 10, 90, 170 };
+    int current_pos = 1;
+    int plat_x = positions[current_pos];
+
+    #define BRICK_COUNT 3
+    int brick_w = 40;
+    int brick_h = 15;
+    int bx[BRICK_COUNT];
+    int by[BRICK_COUNT];
+    int balive[BRICK_COUNT];
+
+    bx[0] = 30;  by[0] = 40;  balive[0] = 1;
+    bx[1] = 170; by[1] = 70;  balive[1] = 1;
+    bx[2] = 100; by[2] = 120; balive[2] = 1;
+
+    int size = 15;
+    int x = plat_x + (plat_w / 2) + 10;
+    int y = plat_y - size - 2;
+    int x_speed = 2;
+    int y_speed = -1;
+
+    uint8_t btn_prev = GPIO_PIN_RESET;
+    uint32_t last_btn_time = 0;
+    int paddle_moved = 1;
+    int brick_hit_index = -1;
+
+    BSP_LCD_SetTextColor(LCD_COLOR_BROWN);
+    for(int i=0; i<BRICK_COUNT; i++) {
+        BSP_LCD_FillRect(bx[i], by[i], brick_w, brick_h);
+    }
 
   /* USER CODE END 2 */
 
-  /* USER CODE BEGIN RTOS_MUTEX */
-  /* add mutexes, ... */
-  /* USER CODE END RTOS_MUTEX */
-
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
-  /* add semaphores, ... */
-  /* USER CODE END RTOS_SEMAPHORES */
-
-  /* USER CODE BEGIN RTOS_TIMERS */
-  /* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
-
-  /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
-
-  /* Create the thread(s) */
-  /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 4096);
-  defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
-
-  /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
-  /* USER CODE END RTOS_THREADS */
-
-  /* Start scheduler */
-  osKernelStart();
-
-  /* We should never get here as control is now taken by the scheduler */
-
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    /* USER CODE END WHILE */
+      int old_x = 0;
+      int old_y = 0;
+      int old_plat_x = plat_x;
 
-    /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
+      while (1)
+      {
+      /* USER CODE BEGIN 3 */
+
+        old_x = x;
+        old_y = y;
+        brick_hit_index = -1;
+
+        uint8_t btn_now = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+        uint32_t now = HAL_GetTick();
+        if (btn_now == GPIO_PIN_SET && btn_prev == GPIO_PIN_RESET && (now - last_btn_time > 200))
+        {
+            old_plat_x = plat_x;
+            current_pos++;
+            if (current_pos > 2) current_pos = 0;
+            plat_x = positions[current_pos];
+            last_btn_time = now;
+            paddle_moved = 1;
+        }
+        btn_prev = btn_now;
+
+        x += x_speed;
+
+        if (x <= 0) { x = 0; x_speed = abs(x_speed); }
+        if (x + size >= max_x) { x = max_x - size; x_speed = -abs(x_speed); }
+
+        if (x + size > plat_x && x < plat_x + plat_w &&
+            y + size > plat_y && y < plat_y + plat_h)
+        {
+            x_speed = -x_speed;
+            x += x_speed;
+        }
+
+        for(int i=0; i<BRICK_COUNT; i++) {
+            if (balive[i] == 1) {
+                if (x + size > bx[i] && x < bx[i] + brick_w &&
+                    y + size > by[i] && y < by[i] + brick_h)
+                {
+                    x_speed = -x_speed;
+                    x += x_speed;
+                    balive[i] = 0;
+                    brick_hit_index = i;
+                }
+            }
+        }
+
+        y += y_speed;
+
+        if (y <= 0) { y = 0; y_speed = abs(y_speed); }
+        if (y + size >= max_y) { y = max_y - size; y_speed = -abs(y_speed); }
+
+        if (x + size > plat_x && x < plat_x + plat_w &&
+            y + size > plat_y && y < plat_y + plat_h)
+        {
+            y_speed = -y_speed;
+            y += y_speed;
+        }
+
+        for(int i=0; i<BRICK_COUNT; i++) {
+            if (balive[i] == 1) {
+                if (x + size > bx[i] && x < bx[i] + brick_w &&
+                    y + size > by[i] && y < by[i] + brick_h)
+                {
+                    y_speed = -y_speed;
+                    y += y_speed;
+                    balive[i] = 0;
+                    brick_hit_index = i;
+                }
+            }
+        }
+
+        while (!(LTDC->CDSR & LTDC_CDSR_VSYNCS));
+
+        BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+        BSP_LCD_FillRect(old_x, old_y, size, size);
+
+        if (paddle_moved == 1) {
+            BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+            BSP_LCD_FillRect(old_plat_x, plat_y, plat_w, plat_h);
+            BSP_LCD_SetTextColor(LCD_COLOR_LIGHTGRAY);
+            BSP_LCD_FillRect(plat_x, plat_y, plat_w, plat_h);
+        }
+        else
+        {
+            if (old_x + size > plat_x && old_x < plat_x + plat_w &&
+                old_y + size > plat_y && old_y < plat_y + plat_h)
+            {
+                 BSP_LCD_SetTextColor(LCD_COLOR_LIGHTGRAY);
+                 BSP_LCD_FillRect(plat_x, plat_y, plat_w, plat_h);
+            }
+        }
+
+        for(int i=0; i<BRICK_COUNT; i++)
+        {
+            if (balive[i] == 1 && i != brick_hit_index)
+            {
+                if (old_x + size > bx[i] && old_x < bx[i] + brick_w &&
+                    old_y + size > by[i] && old_y < by[i] + brick_h)
+                {
+                    BSP_LCD_SetTextColor(LCD_COLOR_BROWN);
+                    BSP_LCD_FillRect(bx[i], by[i], brick_w, brick_h);
+                }
+            }
+        }
+
+        if (brick_hit_index != -1)
+        {
+            BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+            BSP_LCD_FillRect(bx[brick_hit_index], by[brick_hit_index], brick_w, brick_h);
+        }
+
+        BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
+        BSP_LCD_FillRect(x, y, size, size);
+
+        paddle_moved = 0;
+
+      }
+      /* USER CODE END 3 */
 }
-
 /**
   * @brief System Clock Configuration
   * @retval None

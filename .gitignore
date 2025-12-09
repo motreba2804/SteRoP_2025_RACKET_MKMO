@@ -1,0 +1,14 @@
+Debug/
+Release/
+Binaries/
+
+*.elf
+*.bin
+*.hex
+*.o
+*.map
+*.lst
+
+*.bak
+*.swp
+*.tmp

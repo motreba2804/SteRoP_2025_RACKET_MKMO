@@ -72,9 +72,8 @@ volatile uint8_t flaga = 0;
 
 float pitch;
 float roll;
-float ax;
-float ay;
-float az;
+float x;
+float y;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -179,7 +178,7 @@ int main(void)
   while (1)
   {
 	  if (flaga == 1) {
-		  sscanf(wiadomosc, "Pitch: %f\tRoll: %f\tAccel: %f,%f,%f", &pitch, &roll, &ax, &ay, &az);
+		  sscanf(wiadomosc, "Pitch: %f\tRoll: %f\tPos: x: %f, y: %f\n", &pitch, &roll, &x, &y);
 		  flaga = 0;
 	  }
    }

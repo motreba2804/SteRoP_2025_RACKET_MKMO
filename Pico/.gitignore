@@ -1,0 +1,27 @@
+# ===================== Build / kompilacja =====================
+/build/
+/*.elf
+/*.hex
+/*.bin
+/*.uf2
+/*.map
+/*.dis
+
+# ===================== VS Code =====================
+.vscode/
+
+# ===================== CMake =====================
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.cmake
+
+# ===================== System / tymczasowe =====================
+*.swp
+*.tmp
+*.log
+*.DS_Store
+*.user
+*.sublime-workspace
+*.sublime-project

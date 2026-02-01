@@ -27,7 +27,6 @@ private:
 public:
     Arkanoid();
     void init();
-
     void updateAndRender(float roll_input);
 };
 

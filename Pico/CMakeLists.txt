@@ -46,6 +46,7 @@ target_link_libraries(${PROJECT_NAME}
     hardware_uart
     icm20948
     platform
+    
 )
 
 pico_add_extra_outputs(${PROJECT_NAME})

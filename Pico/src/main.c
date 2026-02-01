@@ -5,6 +5,7 @@
 #include "hardware/uart.h"
 #include "icm20948.h"
 #include "platform.h"
+#include "msg.h"
 
 #define SDA_PIN 16
 #define SCL_PIN 17
@@ -61,17 +62,33 @@ int main() {
         last = now;
 
         motion_update(&state, ax, ay, az, gx, gy, gz, dt, k_pitch, k_roll, angle_deadzone, v_max);
+        
+        UART_Packet pkt;
+        pkt.startByte = 0xAA;
 
-        char buf[100];
-        int len = snprintf(buf, sizeof(buf),
-                       "Pitch: %.2f\tRoll: %.2f\tPos: x: %.2f, y: %.2f\n",
-                       state.pitch, state.roll, state.x, state.y);
+        pkt.posX = map_to_u16(state.x);
+        pkt.posY = map_to_u16(state.y);
 
-        // Wysyłka po UART
-        uart_write_blocking(UART_PORT, (const uint8_t*)buf, len);
+        pkt.rotation = (int16_t)((state.roll+1.5f) * 1000.f);
+
+        uint8_t crc = 0;
+        uint8_t* ptr = (uint8_t*)&pkt;
+
+        for (size_t i = 0; i < sizeof(UART_Packet)-1; i++) {
+            crc ^= ptr[i];
+        }
+        pkt.checksum = crc;
+
+        // char buf[100];
+        // int len = snprintf(buf, sizeof(buf),
+        //                "Pitch: %.2f\tRoll: %.2f\tPos: x: %.2f, y: %.2f\n",
+        //                state.pitch, state.roll, state.x, state.y);
+        
+        // // Wysyłka po UART
+        // uart_write_blocking(UART_PORT, (const uint8_t*)buf, len);
+        uart_write_blocking(UART_PORT, (const uint8_t*)&pkt, sizeof(pkt));
     
-        printf("pitch=%.2f deg | roll=%.2f deg | x=%.3f m | y=%.3f m\n",
-               state.pitch*180.0f/M_PI, state.roll*180.0f/M_PI, state.x, state.y);    
-        sleep_ms(10);
+        printf("SRCX: %.3f | SENDX: %u | SRCY: %.3f | SENDY: %u | ROTsrc: %.3f | ROTsend: %u\n", state.x, pkt.posX, state.y, pkt.posY, state.roll ,pkt.rotation);  
+        sleep_ms(16);
     }
 }

@@ -185,7 +185,7 @@ int main(void)
     }
     while (!(LTDC->CDSR & LTDC_CDSR_VSYNCS));
 
-    Game_Loop_CPP(roll);
+    Game_Loop_CPP(x);
 
     /* USER CODE END WHILE */
 

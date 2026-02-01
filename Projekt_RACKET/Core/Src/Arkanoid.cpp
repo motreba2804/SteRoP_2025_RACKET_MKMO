@@ -6,7 +6,6 @@ extern "C" {
     #include "stm32f429i_discovery.h"
 }
 
-
 Arkanoid::Arkanoid() {
     max_w = 0;
     max_h = 0;
@@ -47,7 +46,7 @@ void Arkanoid::init() {
     BSP_LCD_FillRect(plat_x, plat_y, plat_w, plat_h);
 }
 
-void Arkanoid::updateAndRender(float roll_input) {
+void Arkanoid::updateAndRender(float x_input) {
     if (max_w == 0) return;
 
     old_ball_x = ball_x;
@@ -57,10 +56,17 @@ void Arkanoid::updateAndRender(float roll_input) {
     int brick_w = 40;
     int brick_h = 15;
 
-    int center_x = (max_w / 2) - (plat_w / 2);
-    int sensitivity = 5;
+    // --- ZMIANA TUTAJ: Czułość zwiększona do 8.0f ---
+    float sensitivity = 8.0f;
+    float amplified_input = x_input * sensitivity;
 
-    plat_x = center_x + (int)(roll_input * sensitivity);
+    if (amplified_input < -1.0f) amplified_input = -1.0f;
+    if (amplified_input > 1.0f) amplified_input = 1.0f;
+
+    int available_width = max_w - plat_w;
+    float normalized_pos = (amplified_input + 1.0f) / 2.0f;
+
+    plat_x = (int)(normalized_pos * available_width);
 
     if (plat_x < 0) plat_x = 0;
     if (plat_x + plat_w > max_w) plat_x = max_w - plat_w;
@@ -141,6 +147,6 @@ void Game_Init_CPP(void) {
     game.init();
 }
 
-void Game_Loop_CPP(float roll_val) {
-    game.updateAndRender(roll_val);
+void Game_Loop_CPP(float input_val) {
+    game.updateAndRender(input_val);
 }

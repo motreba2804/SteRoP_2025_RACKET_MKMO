@@ -40,9 +40,9 @@ int main() {
     platform_state state;
     motion_init(&state);
 
-    const float k_pitch = 1.0f;
-    const float k_roll  = 1.5f;
-    const float v_max   = 1.5f;
+    const float k_pitch = 2.0f;
+    const float k_roll  = 2.0f;
+    const float v_max   = 2.5f;
     const float angle_deadzone = 0.05f;
 
     absolute_time_t last = get_absolute_time();
@@ -81,7 +81,7 @@ int main() {
 
         uart_write_blocking(UART_PORT, (const uint8_t*)&pkt, sizeof(pkt));
     
-        printf("SRCX: %.3f | SENDX: %u | SRCY: %.3f | SENDY: %u | ROTsrc: %.3f | ROTsend: %u\n", state.x, pkt.posX, state.y, pkt.posY, state.roll ,pkt.rotation);  
-        sleep_ms(16);
+        // printf("SRCX: %.3f | SENDX: %u | SRCY: %.3f | SENDY: %u | ROTsrc: %.3f | ROTsend: %u\n", state.x, pkt.posX, state.y, pkt.posY, state.roll ,pkt.rotation);  
+        // sleep_ms(16);
     }
 }

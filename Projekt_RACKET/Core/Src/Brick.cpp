@@ -33,7 +33,6 @@ bool Brick::checkCollision(const Ball& ball, Vector2D& outNormal) const {
     if (abs(dx) > r || abs(dy) > r) {
         return false;
     }
-    // ---------------------------------------
 
     fix16 distSq = MUL(dx, dx) + MUL(dy, dy);
     fix16 radSq  = MUL(r, r);

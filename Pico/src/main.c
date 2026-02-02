@@ -79,13 +79,6 @@ int main() {
         }
         pkt.checksum = crc;
 
-        // char buf[100];
-        // int len = snprintf(buf, sizeof(buf),
-        //                "Pitch: %.2f\tRoll: %.2f\tPos: x: %.2f, y: %.2f\n",
-        //                state.pitch, state.roll, state.x, state.y);
-        
-        // // Wysyłka po UART
-        // uart_write_blocking(UART_PORT, (const uint8_t*)buf, len);
         uart_write_blocking(UART_PORT, (const uint8_t*)&pkt, sizeof(pkt));
     
         printf("SRCX: %.3f | SENDX: %u | SRCY: %.3f | SENDY: %u | ROTsrc: %.3f | ROTsend: %u\n", state.x, pkt.posX, state.y, pkt.posY, state.roll ,pkt.rotation);  

@@ -11,9 +11,9 @@ typedef struct __attribute__((packed)) {
 } UART_Packet;
 
 uint16_t map_to_u16(float val) {
-    if (val < 0.0f) val = 0.0f;
+    if (val < -1.0f) val = -1.0f;
     if (val > 1.0f) val = 1.0f;
-    return (uint16_t)(val * 65535.0f);
+    return (uint16_t)(((val + 1.0f)/2.0f) * 65535.0f);
 }
 
 

@@ -40,11 +40,18 @@ void motion_update(platform_state *state, float ax, float ay, float az, float gx
     // integracja do pozycji
     state->x += vx * dt;
     state->y += vy * dt;
-    if(state->x <= 0.0f) state->x = 0.0f;
-    if(state->x >= 1.0f) state->x = 1.0f;
-    if(state->y <= 0.0f) state->y = 0.0f;
-    if(state->y >= 1.0f) state->y = 1.0f;
-    if(state->roll <= -1.5f) state->roll = -1.5f;
-    if(state->roll >= 1.5f) state->roll = 1.5f;
+
+    float platformHalfSizeX = 40.0f/240.0f;
+    float platformHalfSizeY = 10.0f/320.0f;
+    float marginX = fabs(cos(state->roll))*platformHalfSizeX + fabs(sin(state->roll))*platformHalfSizeY;
+    float marginY = fabs(sin(state->roll))*platformHalfSizeX + fabs(cos(state->roll))*platformHalfSizeY;
+
+    if(state->x <= (-1.0f+marginX)) state->x = -1.0f+marginX;
+    if(state->x >= (1.0f-marginX)) state->x = 1.0f-marginX;
+    if(state->y <= (0.2f+marginY)) state->y = 0.2f+marginY;
+    if(state->y >= (1.0f-marginY)) state->y = 1.0f-marginY;
+
+    if(state->roll <= -1.0f) state->roll = -1.0f;
+    if(state->roll >= 1.0f) state->roll = 1.0f;
 
 }

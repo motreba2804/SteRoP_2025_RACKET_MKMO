@@ -40,9 +40,9 @@ int main() {
     platform_state state;
     motion_init(&state);
 
-    const float k_pitch = 0.5f;
-    const float k_roll  = 0.5f;
-    const float v_max   = 1.0f;
+    const float k_pitch = 1.0f;
+    const float k_roll  = 1.5f;
+    const float v_max   = 1.5f;
     const float angle_deadzone = 0.05f;
 
     absolute_time_t last = get_absolute_time();
